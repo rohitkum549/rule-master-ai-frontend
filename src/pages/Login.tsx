@@ -3,16 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import { login } from '../services/api';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
     keepLoggedIn: false
   });
 
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value, type } = e.target;
@@ -26,31 +28,47 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
     
-    // Check for admin credentials hardcoded login i am doing  this will be removed later i will use the backend to check the credentials!
-    if (formData.email === 'admin@gmail.com' && formData.password === 'admin') {
-      console.log('Login successful!');
-      // Redirect to dashboard
-      navigate('/dashboard');
-    } else {
-      setError('Invalid credentials. Try admin/admin');
-      console.log('Login failed:', formData);
+    try {
+      const response = await login({
+        username: formData.username,
+        password: formData.password
+      });
+
+      if (response.success) {
+        console.log('Login successful!');
+        navigate('/dashboard');
+      } else {
+        // Set error message directly from response
+        setError(response.message);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <AuthLayout title="Sign In" subtitle="Enter your email and password to sign in!">
-      <form onSubmit={handleSubmit}>
+    <AuthLayout title="Sign In" subtitle="Enter your username and password to sign in!">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-sm">
+            {error}
+          </div>
+        )}
         <Input 
-          label="Email*" 
-          type="email" 
-          id="email" 
-          placeholder="Enter your email"
-          value={formData.email}
+          label="Username*" 
+          type="text" 
+          id="username" 
+          placeholder="Enter your username"
+          value={formData.username}
           onChange={handleInputChange}
-          error={error}
         />
         <Input 
           label="Password*" 
@@ -60,7 +78,7 @@ const Login: React.FC = () => {
           value={formData.password}
           onChange={handleInputChange}
         />
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between">
           <label className="flex items-center">
             <input 
               type="checkbox" 
@@ -73,7 +91,9 @@ const Login: React.FC = () => {
           </label>
           <a href="/forgot-password" className="text-sm text-blue-500 hover:underline">Forgot password?</a>
         </div>
-        <Button type="submit">Sign In</Button>
+        <Button type="submit" disabled={isLoading} className="w-full">
+          {isLoading ? 'Signing In...' : 'Sign In'}
+        </Button>
       </form>
       <p className="text-center text-sm text-gray-600 mt-8">
         Don't have an account? <Link to="/signup" className="text-blue-500 hover:underline">Sign Up</Link>
