@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { isAuthenticated } from '../services/api';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -8,6 +10,19 @@ interface AuthGuardProps {
 // In the future, it can be updated to check for an authentication token
 // and redirect to the login page if the user is not authenticated.
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login', { replace: true });
+    }
+  }, [navigate]);
+
+  // If not authenticated, don't render children
+  if (!isAuthenticated()) {
+    return null;
+  }
+
   return <>{children}</>;
 };
 

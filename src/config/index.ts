@@ -5,6 +5,7 @@ interface Config {
       AUTH: {
         SIGNUP: string;
         LOGIN: string;
+        LOGOUT: string;
       };
       USERS: {
         PROFILE: string;
@@ -20,6 +21,7 @@ const config: Config = {
       AUTH: {
         SIGNUP: '/users/onboard',
         LOGIN: '/auth/login',
+        LOGOUT: '/auth/logout',
       },
       USERS: {
         PROFILE: '/users/profile',
