@@ -10,6 +10,9 @@ interface Config {
       USERS: {
         PROFILE: string;
       };
+      CHAT: {
+        AI: string;
+      };
     };
   };
 }
@@ -25,6 +28,9 @@ const config: Config = {
       },
       USERS: {
         PROFILE: '/users/profile',
+      },
+      CHAT: {
+        AI: '/chat/ai',
       },
     },
   },

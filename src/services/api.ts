@@ -49,6 +49,11 @@ interface UserData {
   avatar?: string;
 }
 
+// Add Chat AI interface
+interface ChatRequest {
+  prompt: string;
+}
+
 class ApiError extends Error {
   constructor(
     message: string, 
@@ -144,6 +149,55 @@ const handleApiResponse = async (response: Response) => {
   }
   
   return data;
+};
+
+// Chat with AI function
+export const chatWithAI = async (data: ChatRequest): Promise<ApiResponse> => {
+  try {
+    const tokens = getAuthTokens();
+    
+    const response = await fetch(`${config.API.BASE_URL}${config.API.ENDPOINTS.CHAT.AI}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `${tokens.token_type} ${tokens.access_token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await handleApiResponse(response);
+    
+    // Handle both direct text responses and rule data responses
+    if (Array.isArray(result.data)) {
+      return {
+        success: true,
+        message: result.message || 'Rules retrieved successfully',
+        data: {
+          data: result.data,
+          pagination: result.pagination,
+          message: result.message || ''
+        }
+      };
+    }
+    
+    return {
+      success: true,
+      message: 'AI response received',
+      data: result
+    };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return {
+        success: false,
+        message: error.message,
+        details: error.details
+      };
+    }
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'An unexpected error occurred'
+    };
+  }
 };
 
 export const signup = async (data: SignupData): Promise<ApiResponse> => {
