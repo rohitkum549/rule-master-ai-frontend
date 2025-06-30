@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { Book, ArrowRight, ExternalLink, Settings, MessageSquare } from 'react-feather';
 import { useTheme } from '../context/ThemeContext';
@@ -76,28 +77,34 @@ const Dashboard: React.FC = () => {
                 <MessageSquare className="w-5 h-5 mr-2" />
                 <p>Start a conversation with our AI to create your first rule</p>
               </div>
-              <button className={`mt-4 w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-              }`}>
+              <Link
+                to="/chat"
+                className={`mt-4 w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                  isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                }`}
+              >
                 Open Chat Interface
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
 
-            {/* Rule Library Card */}
+            {/* View Rules Card (formerly Rule Library) */}
             <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm`}>
-              <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Rule Library</h3>
+              <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>View Rules</h3>
               <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Access and manage your existing business rules</p>
               <div className={`flex items-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                 <Book className="w-5 h-5 mr-2" />
                 <p>View, edit, and organize your business rules in one place</p>
               </div>
-              <button className={`mt-4 w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-              }`}>
-                View Rule Library
+              <Link
+                to="/tables"
+                className={`mt-4 w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                  isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                }`}
+              >
+                View Rules
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>

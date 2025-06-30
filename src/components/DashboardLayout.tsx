@@ -56,7 +56,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   const currentProjectItems = [
     { icon: MessageSquare, label: "Chat with AI", path: "/chat" },
-    { icon: Book, label: "Rule Library", path: "/rules" },
+    { icon: Book, label: "View Rules", path: "/rules" },
   ];
 
   const resourceItems = [

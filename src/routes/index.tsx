@@ -4,7 +4,7 @@ import Login from '../pages/Login';
 import Signup from '../pages/Signup';
 import Dashboard from '../pages/Dashboard';
 import Profile from '../pages/Profile';
-import Tables from '../pages/Tables';
+import ViewRules from '../pages/Tables';
 import Chat from '../pages/Chat';
 import AuthGuard from '../guards/AuthGuard';
 
@@ -29,7 +29,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/getting-started" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat" element={<Chat />} />
-        <Route path="/rules" element={<Dashboard />} />
+        <Route path="/tables" element={<ViewRules />} />
+        <Route path="/rules" element={<ViewRules />} />
         <Route path="/documentation" element={<Dashboard />} />
         <Route path="/discord" element={handleDiscordRedirect()} />
         <Route path="/" element={<Navigate to="/getting-started" replace />} />

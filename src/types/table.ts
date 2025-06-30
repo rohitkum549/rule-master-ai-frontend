@@ -17,4 +17,18 @@ export interface TableRow {
   budget: string;
 }
 
-export type TableData = TableRow[]; 
+export type TableData = TableRow[];
+
+// Rule type definitions
+export interface Rule {
+  id: string;
+  name: string;
+  description: string;
+  condition: string;
+  action: string;
+  category: string;
+  createdAt: string;
+  status: 'Active' | 'Inactive' | 'Draft';
+}
+
+export type RulesData = Rule[]; 

@@ -4,6 +4,7 @@ import AuthLayout from '../components/AuthLayout';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Select from '../components/Select';
+import AlertPopup from '../components/AlertPopup';
 import { signup } from '../services/api';
 
 const Signup: React.FC = () => {
@@ -11,6 +12,7 @@ const Signup: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const departmentOptions = [
     { value: 'IT', label: 'IT' },
@@ -225,10 +227,11 @@ const Signup: React.FC = () => {
       const response = await signup(signupData);
 
       if (response.success) {
-        setSuccessMessage('🎉 Registration successful! Redirecting to login...');
+        setSuccessMessage('Registration successful! Redirecting to login...');
+        setShowSuccessPopup(true);
         setTimeout(() => {
           navigate('/login');
-        }, 2000);
+        }, 2);
       } else {
         const errorMessage = response.details?.errorMessage || response.message;
         
@@ -248,7 +251,8 @@ const Signup: React.FC = () => {
           setApiError('❌ ' + (errorMessage || 'Registration failed. Please try again.'));
         }
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Signup error:', err);
       setApiError('❌ An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -256,21 +260,25 @@ const Signup: React.FC = () => {
   };
 
   return (
-    <AuthLayout title="Sign Up" subtitle="Enter your details to create an account">
-      {successMessage && (
-        <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg flex items-center">
-          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-          </svg>
+    <AuthLayout title="Sign Up" subtitle="Create your account to get started">
+      <AlertPopup
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        message="Registration successful! Redirecting to login..."
+        type="success"
+        autoCloseMs={2}
+      />
+      
+      {/* Display success message if available */}
+      {successMessage && !showSuccessPopup && (
+        <div className="bg-green-50 border border-green-200 text-green-600 rounded-lg p-3 text-sm mb-6">
           {successMessage}
         </div>
       )}
-      
+
+      {/* Display API errors if available */}
       {apiError && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg flex items-center">
-          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
-          </svg>
+        <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-sm mb-6">
           {apiError}
         </div>
       )}
