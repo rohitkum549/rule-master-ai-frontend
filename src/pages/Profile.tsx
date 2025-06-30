@@ -1,35 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { Edit, Facebook, Twitter, Linkedin, Instagram } from 'react-feather';
 import EditProfileModal from '../components/EditProfileModal';
+import { getUserData } from '../services/api';
 
 const Profile: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editSection, setEditSection] = useState<'personal' | 'address' | null>(null);
 
-  // Mock user data - replace with actual user data from your auth system
   const [userData, setUserData] = useState({
-    firstName: "Musharof",
-    lastName: "Chowdhury",
-    email: "randomuser@pimjo.com",
-    phone: "+09 363 398 46",
-    position: "Team Manager",
-    location: "Arizona, United States",
-    bio: "Team Manager",
+    firstName: "",
+    lastName: "",
+    email: "",
+    username: "",
+    phone: "",
+    position: "",
+    location: "",
+    bio: "",
     address: {
-      country: "United States",
-      cityState: "Phoenix, Arizona, United States",
-      postalCode: "ERT 2489",
-      taxId: "AS4568384"
+      country: "",
+      cityState: "",
+      postalCode: "",
+      taxId: ""
     },
     socialLinks: {
-      facebook: "https://www.facebook.com/PimjoHQ",
-      twitter: "https://x.com/PimjoHQ",
-      linkedin: "https://www.linkedin.com/company/pimjo",
-      instagram: "https://instagram.com/PimjoHQ"
+      facebook: "",
+      twitter: "",
+      linkedin: "",
+      instagram: ""
     },
-    avatar: "https://ui-avatars.com/api/?name=Musharof+Chowdhury&background=random&size=200"
+    avatar: ""
   });
+
+  useEffect(() => {
+    const user = getUserData();
+    if (user) {
+      setUserData(prevData => ({
+        ...prevData,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        username: user.username,
+        avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName)}+${encodeURIComponent(user.lastName)}&background=random&size=200`
+      }));
+    }
+  }, []);
 
   const handleEditClick = (section: 'personal' | 'address') => {
     setEditSection(section);
@@ -64,7 +79,7 @@ const Profile: React.FC = () => {
                     {userData.firstName} {userData.lastName}
                   </h2>
                   <div className="text-gray-600 mt-1">
-                    {userData.position} • {userData.location}
+                    {userData.position || 'No position set'} • {userData.location || 'No location set'}
                   </div>
                 </div>
               </div>

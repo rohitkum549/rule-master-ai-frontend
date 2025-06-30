@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User, Settings, HelpCircle, LogOut } from 'react-feather';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../services/api';
 
 interface ProfileDropdownProps {
   userName: string;
@@ -14,6 +15,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   avatarUrl
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -31,9 +33,23 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
     };
   }, []);
 
-  const handleSignOut = () => {
-    // Add your sign out logic here
-    navigate('/login');
+  const handleSignOut = async () => {
+    try {
+      setIsLoading(true);
+      const response = await logout();
+      if (response.success) {
+        navigate('/login', { replace: true });
+      } else {
+        console.error('Logout failed:', response.message);
+        // Still navigate to login even if the API call fails
+        navigate('/login', { replace: true });
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      navigate('/login', { replace: true });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -104,10 +120,11 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+              disabled={isLoading}
+              className="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left disabled:opacity-50"
             >
               <LogOut className="w-4 h-4" />
-              <span>Sign out</span>
+              <span>{isLoading ? 'Signing out...' : 'Sign out'}</span>
             </button>
           </div>
         </div>

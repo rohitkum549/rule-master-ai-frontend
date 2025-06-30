@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Grid,
@@ -19,6 +19,7 @@ import {
   MessageSquare,
 } from 'react-feather';
 import ProfileDropdown from './ProfileDropdown';
+import { getUserData } from '../services/api';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,30 +28,34 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
+  const [userData, setUserData] = useState({
+    userName: '',
+    userEmail: '',
+    avatarUrl: ''
+  });
+
+  useEffect(() => {
+    const user = getUserData();
+    if (user) {
+      setUserData({
+        userName: `${user.firstName} ${user.lastName}`,
+        userEmail: user.email,
+        avatarUrl: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName)}+${encodeURIComponent(user.lastName)}&background=random`
+      });
+    }
+  }, []);
 
   const menuItems = [
     { icon: Grid, label: "Dashboard", path: "/dashboard" },
     { icon: MessageSquare, label: "Chat with AI", path: "/chat" },
     { icon: Book, label: "Rule Library", path: "/rules" },
-    { icon: Code, label: "Custom Functions", path: "/functions" },
-    { icon: GitBranch, label: "Rule Flows", path: "/flows" },
-    { icon: Table, label: "Rule Testing", path: "/testing" },
-    { icon: BarChart2, label: "Analytics", path: "/analytics" },
     { icon: User, label: "User Profile", path: "/profile" },
   ];
 
   const otherItems = [
     { icon: Settings, label: "Settings", path: "/settings" },
-    { icon: Sliders, label: "Preferences", path: "/preferences" },
     { icon: Lock, label: "Access Control", path: "/access-control" },
   ];
-
-  // Mock user data - replace with actual user data from your auth system
-  const userData = {
-    userName: "Musharof Chowdhury",
-    userEmail: "randomuser@pimjo.com",
-    avatarUrl: "https://ui-avatars.com/api/?name=Musharof+Chowdhury&background=random"
-  };
 
   return (
     <div className="flex h-screen bg-gray-100">

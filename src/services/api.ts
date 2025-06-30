@@ -41,6 +41,14 @@ interface AuthTokens {
   token_type: string;
 }
 
+interface UserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  avatar?: string;
+}
+
 class ApiError extends Error {
   constructor(
     message: string, 
@@ -79,6 +87,49 @@ export const clearAuthTokens = () => {
 export const isAuthenticated = (): boolean => {
   const tokens = getAuthTokens();
   return !!(tokens.access_token && (tokens.expires_in ?? 0) > 0);
+};
+
+export const setUserData = (data: UserData) => {
+  localStorage.setItem('user_data', JSON.stringify(data));
+};
+
+// Function to decode JWT token
+const decodeJWT = (token: string): any => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Error decoding JWT:', error);
+    return null;
+  }
+};
+
+// Get user data from access token
+export const getUserData = (): UserData | null => {
+  const accessToken = localStorage.getItem('access_token');
+  if (!accessToken) return null;
+
+  const decodedToken = decodeJWT(accessToken);
+  if (!decodedToken) return null;
+
+  return {
+    firstName: decodedToken.firstName || decodedToken.given_name || '',
+    lastName: decodedToken.lastName || decodedToken.family_name || '',
+    email: decodedToken.email || '',
+    username: decodedToken.username || decodedToken.preferred_username || '',
+    avatar: decodedToken.avatar || decodedToken.picture || ''
+  };
+};
+
+export const clearUserData = () => {
+  localStorage.removeItem('user_data');
 };
 
 const handleApiResponse = async (response: Response) => {
@@ -149,7 +200,21 @@ export const login = async (data: LoginData): Promise<ApiResponse> => {
 
     // Store the tokens
     if (result.access_token) {
-      setAuthTokens(result);
+      localStorage.setItem('access_token', result.access_token);
+      localStorage.setItem('refresh_token', result.refresh_token);
+      localStorage.setItem('token_expiry', (Date.now() + (result.expires_in * 1000)).toString());
+      localStorage.setItem('token_type', result.token_type);
+      
+      // Store user data
+      if (result.user) {
+        setUserData({
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+          email: result.user.email,
+          username: result.user.username,
+          avatar: result.user.avatar
+        });
+      }
     }
     
     return {
@@ -162,6 +227,57 @@ export const login = async (data: LoginData): Promise<ApiResponse> => {
     return {
       success: false,
       message: 'An unexpected error occurred'
+    };
+  }
+};
+
+export const logout = async (): Promise<ApiResponse> => {
+  try {
+    const tokens = getAuthTokens();
+    if (!tokens.refresh_token) {
+      clearAuthTokens();
+      clearUserData(); // Clear user data on logout
+      return {
+        success: true,
+        message: 'Logged out successfully'
+      };
+    }
+
+    const response = await fetch(`${config.API.BASE_URL}${config.API.ENDPOINTS.AUTH.LOGOUT}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        refresh_token: tokens.refresh_token
+      }),
+    });
+
+    // Clear tokens and user data regardless of the response
+    clearAuthTokens();
+    clearUserData();
+
+    if (!response.ok) {
+      const result = await response.json();
+      return {
+        success: false,
+        message: result.message || 'Logout failed',
+        details: result.details
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Logged out successfully'
+    };
+  } catch (error) {
+    // Clear tokens and user data even if the API call fails
+    clearAuthTokens();
+    clearUserData();
+    console.error('Logout error:', error);
+    return {
+      success: false,
+      message: 'An error occurred during logout'
     };
   }
 }; 
