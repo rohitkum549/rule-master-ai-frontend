@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import AlertPopup from '../components/AlertPopup';
 import { login } from '../services/api';
 
 const Login: React.FC = () => {
@@ -15,6 +16,7 @@ const Login: React.FC = () => {
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value, type } = e.target;
@@ -41,7 +43,11 @@ const Login: React.FC = () => {
 
       if (response.success) {
         console.log('Login successful!');
-        navigate('/dashboard');
+        setShowSuccessPopup(true);
+        // Wait for 2ms before redirecting
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2);
       } else {
         // Set error message directly from response
         setError(response.message);
@@ -56,6 +62,13 @@ const Login: React.FC = () => {
 
   return (
     <AuthLayout title="Sign In" subtitle="Enter your username and password to sign in!">
+      <AlertPopup
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        message="Login successful! Redirecting to dashboard..."
+        type="success"
+        autoCloseMs={2}
+      />
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-sm">
