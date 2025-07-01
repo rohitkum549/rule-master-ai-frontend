@@ -3,6 +3,7 @@ import { User, Settings, HelpCircle, LogOut } from 'react-feather';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import AlertPopup from './AlertPopup';
 
 interface ProfileDropdownProps {
   userName: string;
@@ -17,6 +18,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSignoutPopup, setShowSignoutPopup] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { isDark } = useTheme();
@@ -40,7 +42,11 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       setIsLoading(true);
       const response = await logout();
       if (response.success) {
-        navigate('/login', { replace: true });
+        setShowSignoutPopup(true);
+        // Wait for 900ms before redirecting
+        setTimeout(() => {
+          navigate('/login', { replace: true });
+        }, 900);
       } else {
         console.error('Logout failed:', response.message);
         // Still navigate to login even if the API call fails
@@ -56,6 +62,14 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   return (
     <div className="relative" ref={dropdownRef}>
+      <AlertPopup
+        isOpen={showSignoutPopup}
+        onClose={() => setShowSignoutPopup(false)}
+        message="You have been signed out successfully!"
+        type="error"
+        autoCloseMs={900}
+      />
+      
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center space-x-2 focus:outline-none ${isDark ? 'text-gray-200' : 'text-gray-700'}`}
