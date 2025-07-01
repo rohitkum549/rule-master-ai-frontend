@@ -15,10 +15,10 @@ const Signup: React.FC = () => {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const departmentOptions = [
-    { value: 'IT', label: 'IT' },
-    { value: 'HR', label: 'HR' },
-    { value: 'Marketing', label: 'Marketing' },
-    { value: 'Sales', label: 'Sales' },
+    { value: 'it', label: 'IT' },
+    { value: 'hr', label: 'HR' },
+    { value: 'marketing', label: 'Marketing' },
+    { value: 'sales', label: 'Sales' },
   ];
 
   const roleOptions = [
@@ -33,7 +33,7 @@ const Signup: React.FC = () => {
     email: '',
     password: '',
     verifyPassword: '',
-    groupName: 'IT',
+    groupName: 'it',
     roleName: 'admin',
     agreeToTerms: false
   });
@@ -256,7 +256,7 @@ const Signup: React.FC = () => {
         onClose={() => setShowSuccessPopup(false)}
         message="Registration successful! Redirecting to login..."
         type="success"
-        autoCloseMs={2}
+        autoCloseMs={900}
       />
       
       {/* Display success message if available */}

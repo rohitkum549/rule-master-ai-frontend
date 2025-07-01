@@ -335,7 +335,6 @@ const Chat: React.FC = () => {
 
     try {
       // Start simulating typing indicator
-      const aiMessageIndex = messages.length + 1; // User message + AI placeholder
       
       // Call the AI API
       const response = await chatWithAI({ prompt: userMessage.text });
@@ -370,9 +369,9 @@ const Chat: React.FC = () => {
           
           // Update the placeholder with rule data
           setMessages(prev => [
-            ...prev.slice(0, aiMessageIndex),
+            ...prev.slice(0, newMessageIndex),
             {
-              ...prev[aiMessageIndex],
+              ...prev[newMessageIndex],
               text: aiResponseText,
               ruleData: ruleData,
               isStreaming: false
@@ -380,18 +379,51 @@ const Chat: React.FC = () => {
           ]);
         } else {
           // Simulate streaming text response for a more engaging experience
-          simulateStreamingResponse(aiResponseText, aiMessageIndex);
+          simulateStreamingResponse(aiResponseText, messages.length + 1);
         }
       } else {
-        setError('Failed to get response from AI');
-        // Remove the placeholder message
-        setMessages(prev => prev.slice(0, -1));
-        console.error('API Error:', response.message);
+        // Handle error response
+        let errorMessage = response.message || 'Failed to get response from AI';
+        
+        // Calculate aiMessageIndex in the catch block as well
+        const aiMessageIndex = messages.length + 1;
+        
+        // Update the placeholder with the error message as AI response
+        setMessages(prev => [
+          ...prev.slice(0, aiMessageIndex),
+          {
+            ...prev[aiMessageIndex],
+            text: errorMessage,
+            isStreaming: false
+          }
+        ]);
+        
+        // Stop the typing indicator for errors too
+        setIsTyping(false);
+        
+        console.error('API Error:', errorMessage);
       }
-    } catch (err) {
-      setError('An error occurred while communicating with the AI');
-      // Remove the placeholder message
-      setMessages(prev => prev.slice(0, -1));
+    } catch (err: any) {
+      // Get error message from error object if available
+      const errorMessage = err?.response?.data?.message || 
+                          'An error occurred while communicating with the AI';
+      
+      // Calculate aiMessageIndex in the catch block as well
+      const aiMessageIndex = messages.length + 1;
+      
+      // Update the placeholder with the error message as AI response
+      setMessages(prev => [
+        ...prev.slice(0, aiMessageIndex),
+        {
+          ...prev[aiMessageIndex],
+          text: errorMessage,
+          isStreaming: false
+        }
+      ]);
+      
+      // Stop the typing indicator for errors too
+      setIsTyping(false);
+      
       console.error('Error:', err);
     } finally {
       setIsLoading(false);

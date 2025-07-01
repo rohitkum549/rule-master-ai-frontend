@@ -67,7 +67,7 @@ const Login: React.FC = () => {
         onClose={() => setShowSuccessPopup(false)}
         message="Login successful! Redirecting to dashboard..."
         type="success"
-        autoCloseMs={2}
+        autoCloseMs={900}
       />
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
