@@ -3,8 +3,8 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Login from '../pages/Login';
 import Signup from '../pages/Signup';
 import Dashboard from '../pages/Dashboard';
-import Profile from '../pages/Profile';
 import ViewRules from '../pages/Tables';
+import Rules from '../pages/Rules';
 import Chat from '../pages/Chat';
 import AuthGuard from '../guards/AuthGuard';
 
@@ -30,7 +30,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/tables" element={<ViewRules />} />
-        <Route path="/rules" element={<ViewRules />} />
+        <Route path="/rules" element={<Rules />} />
         <Route path="/documentation" element={<Dashboard />} />
         <Route path="/discord" element={handleDiscordRedirect()} />
         <Route path="/" element={<Navigate to="/getting-started" replace />} />

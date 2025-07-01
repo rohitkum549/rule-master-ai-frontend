@@ -21,9 +21,9 @@ const Signup: React.FC = () => {
     { value: 'Sales', label: 'Sales' },
   ];
 
-  const getRoleOptions = (selectedDepartment: string) => [
-    { value: `${selectedDepartment.toLowerCase()}_admin_role`, label: 'Admin' },
-    { value: `${selectedDepartment.toLowerCase()}_user_role`, label: 'User' },
+  const roleOptions = [
+    { value: 'admin', label: 'Admin' },
+    { value: 'user', label: 'User' },
   ];
 
   const [formData, setFormData] = useState({
@@ -34,7 +34,7 @@ const Signup: React.FC = () => {
     password: '',
     verifyPassword: '',
     groupName: 'IT',
-    roleName: 'it_admin_role',
+    roleName: 'admin',
     agreeToTerms: false
   });
 
@@ -77,17 +77,7 @@ const Signup: React.FC = () => {
         setErrors(prev => ({ ...prev, agreeToTerms: '' }));
       }
     } else {
-      if (id === 'groupName') {
-        // When department changes, update the role to match the new department
-        const newRoleName = `${value.toLowerCase()}_admin_role`;
-        setFormData(prev => ({ 
-          ...prev, 
-          [id]: value,
-          roleName: newRoleName
-        }));
-      } else {
-        setFormData(prev => ({ ...prev, [id]: value }));
-      }
+      setFormData(prev => ({ ...prev, [id]: value }));
       setErrors(prev => ({ ...prev, [id]: '' }));
 
       // Real-time password validation
@@ -364,7 +354,7 @@ const Signup: React.FC = () => {
         <Select 
           label="Role" 
           id="roleName" 
-          options={getRoleOptions(formData.groupName)}
+          options={roleOptions}
           value={formData.roleName}
           onChange={handleInputChange}
         />
