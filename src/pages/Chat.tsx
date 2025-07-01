@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { chatWithAI } from '../services/api';
+import { chatWithAI, isAuthenticated, getUserData } from '../services/api';
 
 // Storage key for chat messages
 const STORAGE_KEY = 'chat_messages';
 const PAGINATION_KEY = 'chat_pagination';
+// Key to store the last logged-in user
+const LAST_USER_KEY = 'last_logged_in_user';
 
 interface Message {
   text: string;
@@ -130,9 +132,82 @@ const Chat: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<{[messageIndex: number]: number}>(() => 
     localStorageUtil.get(PAGINATION_KEY) || {}
   );
+  // Track the current user
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Memoize the handleStartNewConversation function to use in effects
+  const handleStartNewConversation = useCallback((param?: React.MouseEvent | boolean) => {
+    // If param is a MouseEvent, prevent default
+    if (param && typeof param !== 'boolean' && 'preventDefault' in param) {
+      param.preventDefault();
+    }
+    
+    // Default clearLocalStorage to true unless explicitly set to false
+    const clearLocalStorage = param !== false;
+    
+    const initialMessage = {
+      text: "Hello! I'm Rule Master AI. I can help you write, understand, and evaluate business rules. How can I assist you today?",
+      sender: 'ai' as const,
+      timestamp: new Date(),
+    };
+    
+    setMessages([initialMessage]);
+    setCurrentPage({});
+    
+    // Clear stored conversation from localStorage if requested
+    if (clearLocalStorage) {
+      localStorageUtil.remove(STORAGE_KEY);
+      localStorageUtil.remove(PAGINATION_KEY);
+    }
+  }, []);
+
+  // Check authentication status and current user
+  useEffect(() => {
+    const checkAuthAndUser = () => {
+      // Get current authentication status
+      const authenticated = isAuthenticated();
+      
+      if (!authenticated) {
+        // User is not authenticated, clear chat history
+        handleStartNewConversation();
+        // Also clear the last user
+        localStorageUtil.remove(LAST_USER_KEY);
+        setCurrentUser(null);
+        return;
+      }
+      
+      // User is authenticated, get user data
+      const userData = getUserData();
+      if (!userData) return;
+      
+      const userIdentifier = userData.username || userData.email;
+      setCurrentUser(userIdentifier);
+      
+      // Get the last logged in user
+      const lastUser = localStorageUtil.get(LAST_USER_KEY);
+      
+      // If this is a different user than the last one who used the chat, clear chat history
+      if (lastUser !== userIdentifier) {
+        console.log('User changed, clearing chat history');
+        handleStartNewConversation();
+        // Update the last logged in user
+        localStorageUtil.set(LAST_USER_KEY, userIdentifier);
+      }
+    };
+    
+    // Run the check on component mount
+    checkAuthAndUser();
+    
+    // Set up an interval to periodically check authentication status
+    const authCheckInterval = setInterval(checkAuthAndUser, 60000); // Check every minute
+    
+    return () => {
+      clearInterval(authCheckInterval);
+    };
+  }, [handleStartNewConversation]);
 
   // Debounced function to save messages to localStorage
   const debouncedSaveMessages = useCallback((newMessages: Message[]) => {
@@ -141,7 +216,10 @@ const Chat: React.FC = () => {
     }
     
     saveTimeoutRef.current = setTimeout(() => {
-      localStorageUtil.set(STORAGE_KEY, newMessages);
+      // Only save messages if the user is authenticated
+      if (isAuthenticated()) {
+        localStorageUtil.set(STORAGE_KEY, newMessages);
+      }
     }, 500); // 500ms debounce time
   }, []);
 
@@ -158,7 +236,10 @@ const Chat: React.FC = () => {
   
   // Save pagination state to localStorage
   useEffect(() => {
-    localStorageUtil.set(PAGINATION_KEY, currentPage);
+    // Only save pagination if the user is authenticated
+    if (isAuthenticated()) {
+      localStorageUtil.set(PAGINATION_KEY, currentPage);
+    }
   }, [currentPage]);
 
   // Scroll to bottom of messages when messages change
@@ -317,21 +398,6 @@ const Chat: React.FC = () => {
     }
   };
 
-  const handleStartNewConversation = () => {
-    const initialMessage = {
-      text: "Hello! I'm Rule Master AI. I can help you write, understand, and evaluate business rules. How can I assist you today?",
-      sender: 'ai' as const,
-      timestamp: new Date(),
-    };
-    
-    setMessages([initialMessage]);
-    setCurrentPage({});
-    
-    // Clear stored conversation from localStorage
-    localStorageUtil.remove(STORAGE_KEY);
-    localStorageUtil.remove(PAGINATION_KEY);
-  };
-
   // Memoize the RuleTable component to prevent unnecessary re-renders
   const RuleTable = useMemo(() => {
     return ({ rules, messageIndex }: { rules: Rule[], messageIndex: number }) => {
@@ -445,8 +511,17 @@ const Chat: React.FC = () => {
               }`}
             >
               {message.sender === 'ai' && (
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-                  <span className="font-bold text-blue-500">AI</span>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mr-2 shadow-md p-0.5 border border-blue-200">
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                      className="h-6 w-6 text-blue-500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
+                      <circle cx="12" cy="5" r="2"></circle>
+                      <path d="M12 7v4"></path>
+                      <line x1="8" y1="16" x2="8" y2="16"></line>
+                      <line x1="16" y1="16" x2="16" y2="16"></line>
+                    </svg>
+                  </div>
                 </div>
               )}
               <div
@@ -461,7 +536,16 @@ const Chat: React.FC = () => {
                 )}
                 
                 {message.isStreaming && (
-                  <div className="inline-block h-4 w-2 ml-1 bg-blue-500 animate-pulse rounded-full"></div>
+                  <div className="inline-flex items-center">
+                    <span className="inline-block h-5 w-2 bg-blue-500 rounded-full mr-1 animate-pulse"></span>
+                    <span className="text-blue-500 font-medium text-sm animate-pulse">Thinking</span>
+                    <span className="relative ml-1">
+                      <span className="absolute -top-1 animate-bounce" style={{ animationDelay: '0ms', animationDuration: '0.6s' }}>.</span>
+                      <span className="absolute -top-1 left-1 animate-bounce" style={{ animationDelay: '200ms', animationDuration: '0.6s' }}>.</span>
+                      <span className="absolute -top-1 left-2 animate-bounce" style={{ animationDelay: '400ms', animationDuration: '0.6s' }}>.</span>
+                      <span className="opacity-0">...</span>
+                    </span>
+                  </div>
                 )}
                 
                 {message.ruleData && message.ruleData.rules.length > 0 && (
@@ -483,8 +567,14 @@ const Chat: React.FC = () => {
                 </span>
               </div>
               {message.sender === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center ml-2">
-                  <span className="font-bold text-white">You</span>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center ml-2 shadow-md p-0.5 border border-blue-300">
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                      className="h-6 w-6 text-blue-600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
                 </div>
               )}
             </div>
@@ -492,15 +582,25 @@ const Chat: React.FC = () => {
         )}
         {isTyping && !messages[messages.length - 1]?.isStreaming && (
           <div className="flex justify-start">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-              <span className="font-bold text-blue-500">AI</span>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mr-2 shadow-md p-0.5 border border-blue-200">
+              <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                  className="h-6 w-6 text-blue-500 animate-pulse" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
+                  <circle cx="12" cy="5" r="2"></circle>
+                  <path d="M12 7v4"></path>
+                  <line x1="8" y1="16" x2="8" y2="16"></line>
+                  <line x1="16" y1="16" x2="16" y2="16"></line>
+                </svg>
+              </div>
             </div>
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 border border-gray-200 rounded-lg p-4 max-w-[80%] shadow-sm">
-              <div className="flex items-center space-x-3">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              <div className="typing-animation flex items-center">
+                <span className="text-blue-600 text-sm font-medium mr-2">AI is thinking</span>
+                <div className="flex space-x-2">
+                  <div className="typing-dot bg-blue-600 w-2.5 h-2.5 rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '0.6s' }}></div>
+                  <div className="typing-dot bg-blue-500 w-2.5 h-2.5 rounded-full animate-bounce" style={{ animationDelay: '200ms', animationDuration: '0.6s' }}></div>
+                  <div className="typing-dot bg-blue-400 w-2.5 h-2.5 rounded-full animate-bounce" style={{ animationDelay: '400ms', animationDuration: '0.6s' }}></div>
                 </div>
               </div>
             </div>
@@ -527,12 +627,12 @@ const Chat: React.FC = () => {
             <h1 className="text-2xl font-bold">Chat with Rule Master AI</h1>
             <button 
               onClick={handleStartNewConversation}
-              className="px-4 py-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600 text-sm transition-colors flex items-center"
+              className="group px-4 py-2 rounded-lg bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white text-sm transition-all duration-150 flex items-center shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              Start New Conversation
+              <span>New Conversation</span>
             </button>
           </div>
           
@@ -548,7 +648,7 @@ const Chat: React.FC = () => {
                   <button
                     key={index}
                     onClick={() => handleSendMessage(template)}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm py-2 px-4 rounded-full transition-colors"
+                    className="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 text-sm py-2 px-4 rounded-lg transition-all shadow-sm hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98] border border-gray-200"
                     disabled={isLoading}
                   >
                     {template.length > 60 ? template.substring(0, 60) + '...' : template}
@@ -565,23 +665,31 @@ const Chat: React.FC = () => {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message..."
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              className="flex-1 border border-gray-300 rounded-lg px-5 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm hover:shadow transition-shadow bg-gray-50 hover:bg-white"
               disabled={isLoading}
               autoComplete="off"
             />
             <button
               type="submit"
               disabled={isLoading || !inputMessage.trim()}
-              className={`px-6 py-3 rounded-lg transition-all flex items-center ${
+              className={`group px-6 py-3 rounded-lg transition-all flex items-center ${
                 isLoading || !inputMessage.trim()
                   ? 'bg-blue-300 text-white cursor-not-allowed'
-                  : 'bg-blue-500 text-white hover:bg-blue-600 shadow-sm'
+                  : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-150'
               }`}
             >
-              {isLoading ? 'Sending...' : (
+              {isLoading ? (
+                <div className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </div>
+              ) : (
                 <>
                   Send
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </>
