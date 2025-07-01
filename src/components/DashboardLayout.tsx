@@ -3,19 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Grid,
   Book,
-  Code,
-  User,
-  FileText,
-  Table,
-  Settings,
   BarChart2,
-  Box,
-  Lock,
   Menu,
   Search,
   Bell,
-  Sliders,
-  GitBranch,
   MessageSquare,
   Sun,
   Moon,
@@ -62,11 +53,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const resourceItems = [
     { icon: Book, label: "Documentation", path: "/documentation" },
     { icon: MessageSquare, label: "Discord Community", path: "/discord" },
-  ];
-
-  const otherItems = [
-    { icon: Settings, label: "Settings", path: "/settings" },
-    { icon: Lock, label: "Access Control", path: "/access-control" },
   ];
 
   return (

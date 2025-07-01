@@ -3,7 +3,6 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Login from '../pages/Login';
 import Signup from '../pages/Signup';
 import Dashboard from '../pages/Dashboard';
-import Profile from '../pages/Profile';
 import ViewRules from '../pages/Tables';
 import Rules from '../pages/Rules';
 import Chat from '../pages/Chat';

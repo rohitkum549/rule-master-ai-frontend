@@ -3,12 +3,12 @@
 
 import config from '../config';
 
-interface ApiErrorResponse {
-  message: string;
-  details?: {
-    errorMessage: string;
-  };
-}
+// interface ApiErrorResponse {
+//   message: string;
+//   details?: {
+//     errorMessage: string;
+//   };
+// }
 
 interface ApiResponse {
   success: boolean;
