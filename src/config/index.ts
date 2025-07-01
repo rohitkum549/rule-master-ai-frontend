@@ -13,6 +13,9 @@ interface Config {
       CHAT: {
         AI: string;
       };
+      RULES: {
+        LIST: string;
+      };
     };
   };
 }
@@ -31,6 +34,9 @@ const config: Config = {
       },
       CHAT: {
         AI: '/chat/ai',
+      },
+      RULES: {
+        LIST: '/rules',
       },
     },
   },

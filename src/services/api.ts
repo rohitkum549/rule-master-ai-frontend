@@ -17,6 +17,12 @@ interface ApiResponse {
     errorMessage?: string;
   };
   data?: any;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 interface SignupData {
@@ -52,6 +58,57 @@ interface UserData {
 // Add Chat AI interface
 interface ChatRequest {
   prompt: string;
+}
+
+// Add Rules interface
+interface Rule {
+  id: string;
+  title: string;
+  created_by: string;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  department: string;
+  is_active: boolean;
+  logic: string;
+  rule_conditions: {
+    id: string;
+    field: string;
+    value: string;
+    rule_id: string;
+    operator: string;
+    created_at: string;
+    created_by: string;
+    updated_at: string;
+    updated_by: string | null;
+  }[];
+  rule_actions: {
+    id: string;
+    type: string;
+    value: string;
+    rule_id: string;
+    created_at: string;
+    created_by: string;
+    updated_at: string;
+    updated_by: string | null;
+  }[];
+}
+
+interface RulesResponse {
+  success: boolean;
+  data: Rule[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+interface RulesParams {
+  page?: number;
+  limit?: number;
+  isActive?: boolean;
 }
 
 class ApiError extends Error {
@@ -333,5 +390,39 @@ export const logout = async (): Promise<ApiResponse> => {
       success: false,
       message: 'An error occurred during logout'
     };
+  }
+};
+
+export const fetchRules = async (params: RulesParams = {}): Promise<RulesResponse> => {
+  try {
+    const tokens = getAuthTokens();
+    const queryParams = new URLSearchParams();
+    
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+    
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    
+    const response = await fetch(`${config.API.BASE_URL}${config.API.ENDPOINTS.RULES.LIST}${queryString}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `${tokens.token_type} ${tokens.access_token}`,
+      },
+    });
+
+    const result = await handleApiResponse(response);
+    
+    return result as RulesResponse;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new ApiError(
+        error.message,
+        error.statusCode,
+        error.details
+      );
+    }
+    throw new Error(error instanceof Error ? error.message : 'An unexpected error occurred');
   }
 }; 
