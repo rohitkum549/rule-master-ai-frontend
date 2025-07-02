@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'react-feather';
+import { useTheme } from '../context/ThemeContext';
 
 interface ModalProps {
   isOpen: boolean;
@@ -10,6 +11,8 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, subtitle, children }) => {
+  const { isDark } = useTheme();
+  
   if (!isOpen) return null;
 
   return (
@@ -19,20 +22,32 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, subtitle, childre
 
       {/* Modal */}
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-lg">
+        <div className={`relative w-full max-w-2xl rounded-xl shadow-lg ${
+          isDark 
+            ? 'bg-gray-800 border border-gray-700' 
+            : 'bg-white'
+        }`}>
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 p-1 rounded-full hover:bg-gray-100"
+            className={`absolute right-4 top-4 p-1 rounded-full ${
+              isDark 
+                ? 'hover:bg-gray-700 text-gray-400 hover:text-white' 
+                : 'hover:bg-gray-100 text-gray-500'
+            }`}
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5" />
           </button>
 
           {/* Header */}
           <div className="p-6 pb-0">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+            <h2 className={`text-xl font-semibold ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>{title}</h2>
             {subtitle && (
-              <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+              <p className={`mt-1 text-sm ${
+                isDark ? 'text-gray-400' : 'text-gray-500'
+              }`}>{subtitle}</p>
             )}
           </div>
 

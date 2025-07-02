@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { MoreVertical } from 'react-feather';
+import { MoreVertical, Edit, Trash2 } from 'react-feather';
 
 interface RuleCondition {
   id: string;
@@ -31,6 +31,8 @@ interface RuleCardProps {
   conditions: RuleCondition[];
   actions: RuleAction[];
   updatedAt: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const RuleCard: React.FC<RuleCardProps> = ({
@@ -39,8 +41,26 @@ const RuleCard: React.FC<RuleCardProps> = ({
   conditions,
   actions,
   updatedAt,
+  onEdit,
+  onDelete,
 }) => {
   const { isDark } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Function to format the condition for display
   const formatCondition = (condition: RuleCondition) => {
@@ -114,13 +134,56 @@ const RuleCard: React.FC<RuleCardProps> = ({
         {/* Header with title and menu */}
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-lg font-bold tracking-tight">{title}</h3>
-          <button className={`p-1.5 rounded-full transition-colors ${
-            isDark 
-              ? 'hover:bg-gray-700 text-gray-300 hover:text-white' 
-              : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
-          }`}>
-            <MoreVertical size={16} />
-          </button>
+          <div className="relative" ref={menuRef}>
+            <button 
+              className={`p-1.5 rounded-full transition-colors ${
+                isDark 
+                  ? 'hover:bg-gray-700 text-gray-300 hover:text-white' 
+                  : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
+              }`}
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <MoreVertical size={16} />
+            </button>
+            
+            {/* Dropdown menu */}
+            {menuOpen && (
+              <div className={`absolute right-0 mt-1 w-36 rounded-md shadow-lg z-10 ${
+                isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+              }`}>
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (onEdit) onEdit();
+                    }}
+                    className={`flex items-center w-full px-4 py-2 text-sm ${
+                      isDark 
+                        ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <Edit size={14} className="mr-2" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (onDelete) onDelete();
+                    }}
+                    className={`flex items-center w-full px-4 py-2 text-sm ${
+                      isDark 
+                        ? 'text-red-400 hover:bg-gray-700 hover:text-red-300' 
+                        : 'text-red-600 hover:bg-gray-100 hover:text-red-700'
+                    }`}
+                  >
+                    <Trash2 size={14} className="mr-2" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Badge for department if exists */}

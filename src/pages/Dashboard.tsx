@@ -1,11 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { Book, ArrowRight, ExternalLink, Settings, MessageSquare, FileText } from 'react-feather';
 import { useTheme } from '../context/ThemeContext';
+import { fetchRuleStats } from '../services/api';
+
+// Stats interface
+interface RuleStats {
+  totalRules: number;
+  activeRules: number;
+  inactiveRules: number;
+  totalDepartments: number;
+}
 
 const Dashboard: React.FC = () => {
   const { isDark } = useTheme();
+  const [stats, setStats] = useState<RuleStats>({
+    totalRules: 0,
+    activeRules: 0,
+    inactiveRules: 0,
+    totalDepartments: 0
+  });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getStats = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchRuleStats();
+        if (response.success && response.data) {
+          setStats(response.data);
+        } else {
+          setError('Failed to fetch statistics');
+        }
+      } catch (err) {
+        setError('An error occurred while fetching statistics');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getStats();
+  }, []);
 
   return (
     <DashboardLayout>
@@ -34,32 +72,55 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm`}>
             <div className={`flex items-center gap-2 ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
               <Book className="w-5 h-5" />
               <span>Active Rules</span>
             </div>
-            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>0</div>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-2`}>Start creating business rules</p>
+            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {loading ? '...' : stats.activeRules}
+            </div>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-2`}>
+              {stats.activeRules > 0 ? 'Business rules in use' : 'Start creating business rules'}
+            </p>
           </div>
 
           <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm`}>
             <div className={`flex items-center gap-2 ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
               <MessageSquare className="w-5 h-5" />
-              <span>Rule Executions</span>
+              <span>Total Rules</span>
             </div>
-            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>0</div>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-2`}>Total rules executed</p>
+            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {loading ? '...' : stats.totalRules}
+            </div>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-2`}>Total rules created</p>
           </div>
 
           <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm`}>
             <div className={`flex items-center gap-2 ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
               <Settings className="w-5 h-5" />
-              <span>Rule Categories</span>
+              <span>Total Departments</span>
             </div>
-            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>0</div>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-2`}>Organize your rules</p>
+            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {loading ? '...' : stats.totalDepartments}
+            </div>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-2`}>
+              {stats.totalDepartments > 0 ? 'Departments using rules' : 'No departments yet'}
+            </p>
+          </div>
+
+          <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm`}>
+            <div className={`flex items-center gap-2 ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2`}>
+              <Book className="w-5 h-5 text-gray-400" />
+              <span>Inactive Rules</span>
+            </div>
+            <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              {loading ? '...' : stats.inactiveRules}
+            </div>
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-2`}>
+              {stats.inactiveRules > 0 ? 'Rules currently disabled' : 'No inactive rules'}
+            </p>
           </div>
         </div>
 
