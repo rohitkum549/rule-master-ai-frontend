@@ -111,6 +111,19 @@ interface RulesParams {
   isActive?: boolean;
 }
 
+// Interface for rule statistics
+interface RuleStats {
+  totalRules: number;
+  activeRules: number;
+  inactiveRules: number;
+  totalDepartments: number;
+}
+
+interface RuleStatsResponse {
+  success: boolean;
+  data: RuleStats;
+}
+
 class ApiError extends Error {
   constructor(
     message: string, 
@@ -424,5 +437,68 @@ export const fetchRules = async (params: RulesParams = {}): Promise<RulesRespons
       );
     }
     throw new Error(error instanceof Error ? error.message : 'An unexpected error occurred');
+  }
+};
+
+// Fetch rule statistics
+export const fetchRuleStats = async (): Promise<RuleStatsResponse> => {
+  try {
+    const tokens = getAuthTokens();
+    
+    const response = await fetch(`${config.API.BASE_URL}${config.API.ENDPOINTS.RULES.STATS}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `${tokens.token_type} ${tokens.access_token}`,
+      },
+    });
+
+    const result = await handleApiResponse(response);
+    
+    return result as RuleStatsResponse;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new ApiError(
+        error.message,
+        error.statusCode,
+        error.details
+      );
+    }
+    throw new Error(error instanceof Error ? error.message : 'An unexpected error occurred');
+  }
+};
+
+// Delete a rule by ID
+export const deleteRule = async (ruleId: string): Promise<ApiResponse> => {
+  try {
+    const tokens = getAuthTokens();
+    
+    const response = await fetch(`${config.API.BASE_URL}${config.API.ENDPOINTS.RULES.LIST}/${ruleId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `${tokens.token_type} ${tokens.access_token}`,
+      },
+    });
+
+    const result = await handleApiResponse(response);
+    
+    return {
+      success: true,
+      message: 'Rule deleted successfully',
+      data: result
+    };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return {
+        success: false,
+        message: error.message,
+        details: error.details
+      };
+    }
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'An unexpected error occurred'
+    };
   }
 }; 

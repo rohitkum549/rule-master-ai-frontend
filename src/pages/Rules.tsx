@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import RuleCard from '../components/RuleCard';
 import { useTheme } from '../context/ThemeContext';
-import { fetchRules } from '../services/api';
+import { fetchRules, deleteRule } from '../services/api';
 import { ChevronLeft, ChevronRight, Plus, Upload, Download } from 'react-feather';
+import Modal from '../components/Modal';
+import AlertPopup from '../components/AlertPopup';
 
 interface Rule {
   id: string;
@@ -47,6 +49,10 @@ const Rules: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalRules, setTotalRules] = useState<number>(0);
   const [itemsPerPage] = useState<number>(10);
+  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [selectedRule, setSelectedRule] = useState<Rule | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [alertMessage, setAlertMessage] = useState<{type: 'success' | 'error', message: string} | null>(null);
   
   useEffect(() => {
     const loadRules = async () => {
@@ -77,10 +83,85 @@ const Rules: React.FC = () => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
+
+  const handleEditRule = (rule: Rule) => {
+    // Handle edit logic - can be implemented to navigate to edit page
+    console.log('Edit rule:', rule.id);
+    // For example: navigate to edit page
+    // history.push(`/rules/edit/${rule.id}`);
+  };
+
+  const handleDeleteRule = (rule: Rule) => {
+    setSelectedRule(rule);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteRule = async () => {
+    if (!selectedRule) return;
+    
+    try {
+      setDeleteLoading(true);
+      const response = await deleteRule(selectedRule.id);
+      
+      if (response.success) {
+        // Update local state
+        setRules(rules.filter(rule => rule.id !== selectedRule.id));
+        setAlertMessage({
+          type: 'success',
+          message: 'Rule deleted successfully'
+        });
+        
+        // Update total count
+        setTotalRules(prev => prev - 1);
+        
+        // If we deleted the last item on the page and it's not the first page,
+        // go to the previous page
+        if (rules.length === 1 && currentPage > 1) {
+          handlePageChange(currentPage - 1);
+        }
+      } else {
+        setAlertMessage({
+          type: 'error',
+          message: response.message || 'Failed to delete rule'
+        });
+      }
+    } catch (err) {
+      console.error('Failed to delete rule:', err);
+      setAlertMessage({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to delete rule'
+      });
+    } finally {
+      setDeleteLoading(false);
+      setDeleteModalOpen(false);
+      setSelectedRule(null);
+    }
+  };
+  
+  // Auto-hide alert after 5 seconds
+  useEffect(() => {
+    if (alertMessage) {
+      const timer = setTimeout(() => {
+        setAlertMessage(null);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [alertMessage]);
   
   return (
     <DashboardLayout>
       <div className="p-6">
+        {/* Show alert message */}
+        {alertMessage && (
+          <AlertPopup 
+            type={alertMessage.type}
+            message={alertMessage.message}
+            onClose={() => setAlertMessage(null)}
+            isOpen={!!alertMessage}
+          />
+        )}
+        
         {/* Header section with title and actions */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between">
           <div>
@@ -93,14 +174,14 @@ const Rules: React.FC = () => {
           </div>
           
           <div className="flex space-x-3 mt-4 md:mt-0">
-            <button className={`px-3 py-2 rounded-md text-sm flex items-center ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>
+            {/* <button className={`px-3 py-2 rounded-md text-sm flex items-center ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>
               <Upload size={16} className="mr-2" />
               Import
-            </button>
-            <button className={`px-3 py-2 rounded-md text-sm flex items-center ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>
+            </button> */}
+            {/* <button className={`px-3 py-2 rounded-md text-sm flex items-center ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>
               <Download size={16} className="mr-2" />
               Export
-            </button>
+            </button> */}
             <button className="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 text-white flex items-center">
               <Plus size={16} className="mr-2" />
               Add Rule
@@ -136,6 +217,8 @@ const Rules: React.FC = () => {
                   conditions={rule.rule_conditions}
                   actions={rule.rule_actions}
                   updatedAt={rule.updated_at}
+                  onEdit={() => handleEditRule(rule)}
+                  onDelete={() => handleDeleteRule(rule)}
                 />
               ))}
             </div>
@@ -212,6 +295,56 @@ const Rules: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          if (!deleteLoading) {
+            setDeleteModalOpen(false);
+            setSelectedRule(null);
+          }
+        }}
+        title="Delete Rule"
+      >
+        <div className="p-6">
+          <p className={`mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+            Are you sure you want to delete the rule "{selectedRule?.title}"? This action cannot be undone.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setSelectedRule(null);
+              }}
+              disabled={deleteLoading}
+              className={`px-4 py-2 rounded-md ${
+                deleteLoading ? 'opacity-50 cursor-not-allowed' : 
+                isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDeleteRule}
+              disabled={deleteLoading}
+              className={`px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 flex items-center ${
+                deleteLoading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
+            >
+              {deleteLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Deleting...
+                </>
+              ) : 'Delete'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </DashboardLayout>
   );
 };

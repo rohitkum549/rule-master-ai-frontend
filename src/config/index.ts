@@ -15,6 +15,7 @@ interface Config {
       };
       RULES: {
         LIST: string;
+        STATS: string;
       };
     };
   };
@@ -37,6 +38,7 @@ const config: Config = {
       },
       RULES: {
         LIST: '/rules',
+        STATS: '/rules/stats/rules',
       },
     },
   },
