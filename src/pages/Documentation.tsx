@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTheme } from '../context/ThemeContext';
-import { ChevronDown, ChevronUp, Users, Lock, MessageSquare, Book, Settings, Code, Database } from 'react-feather';
+import { ChevronDown, ChevronUp, Users, Lock, MessageSquare, Book, Settings, Code } from 'react-feather';
 
 const Documentation: React.FC = () => {
   const { isDark } = useTheme();

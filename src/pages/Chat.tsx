@@ -133,7 +133,7 @@ const Chat: React.FC = () => {
     localStorageUtil.get(PAGINATION_KEY) || {}
   );
   // Track the current user
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  // const [currentUser, setCurrentUser] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -175,7 +175,7 @@ const Chat: React.FC = () => {
         handleStartNewConversation();
         // Also clear the last user
         localStorageUtil.remove(LAST_USER_KEY);
-        setCurrentUser(null);
+        // setCurrentUser(null);
         return;
       }
       
@@ -184,7 +184,7 @@ const Chat: React.FC = () => {
       if (!userData) return;
       
       const userIdentifier = userData.username || userData.email;
-      setCurrentUser(userIdentifier);
+      // setCurrentUser(userIdentifier);
       
       // Get the last logged in user
       const lastUser = localStorageUtil.get(LAST_USER_KEY);
