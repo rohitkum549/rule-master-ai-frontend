@@ -41,7 +41,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   }, []);
 
   const menuItems = [
-    { icon: Grid, label: "Getting Started", path: "/getting-started" },
     { icon: BarChart2, label: "Dashboard", path: "/dashboard" },
   ];
 
