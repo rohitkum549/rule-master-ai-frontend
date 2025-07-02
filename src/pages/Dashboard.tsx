@@ -177,7 +177,7 @@ const Dashboard: React.FC = () => {
                 <p>View, edit, and organize your business rules in one place</p>
               </div>
               <Link
-                to="/tables"
+                to="/rules"
                 className={`mt-4 w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
                   isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                 }`}

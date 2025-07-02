@@ -174,14 +174,14 @@ const Rules: React.FC = () => {
           </div>
           
           <div className="flex space-x-3 mt-4 md:mt-0">
-            <button className={`px-3 py-2 rounded-md text-sm flex items-center ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>
+            {/* <button className={`px-3 py-2 rounded-md text-sm flex items-center ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>
               <Upload size={16} className="mr-2" />
               Import
-            </button>
-            <button className={`px-3 py-2 rounded-md text-sm flex items-center ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>
+            </button> */}
+            {/* <button className={`px-3 py-2 rounded-md text-sm flex items-center ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>
               <Download size={16} className="mr-2" />
               Export
-            </button>
+            </button> */}
             <button className="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 text-white flex items-center">
               <Plus size={16} className="mr-2" />
               Add Rule
