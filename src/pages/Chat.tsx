@@ -133,7 +133,7 @@ const Chat: React.FC = () => {
     localStorageUtil.get(PAGINATION_KEY) || {}
   );
   // Track the current user
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  // const [currentUser, setCurrentUser] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -175,7 +175,7 @@ const Chat: React.FC = () => {
         handleStartNewConversation();
         // Also clear the last user
         localStorageUtil.remove(LAST_USER_KEY);
-        setCurrentUser(null);
+        // setCurrentUser(null);
         return;
       }
       
@@ -184,7 +184,7 @@ const Chat: React.FC = () => {
       if (!userData) return;
       
       const userIdentifier = userData.username || userData.email;
-      setCurrentUser(userIdentifier);
+      // setCurrentUser(userIdentifier);
       
       // Get the last logged in user
       const lastUser = localStorageUtil.get(LAST_USER_KEY);
@@ -405,8 +405,24 @@ const Chat: React.FC = () => {
       }
     } catch (err: any) {
       // Get error message from error object if available
-      const errorMessage = err?.response?.data?.message || 
-                          'An error occurred while communicating with the AI';
+      let errorMessage = 'An error occurred while communicating with the AI';
+      
+      // Extract error message - handle different error response formats
+      if (err?.response?.data) {
+        if (typeof err.response.data === 'string') {
+          try {
+            // Try to parse if it's a JSON string
+            const parsedError = JSON.parse(err.response.data);
+            errorMessage = parsedError.message || errorMessage;
+          } catch {
+            errorMessage = err.response.data;
+          }
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
       
       // Calculate aiMessageIndex in the catch block as well
       const aiMessageIndex = messages.length + 1;

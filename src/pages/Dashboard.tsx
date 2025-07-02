@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
-import { Book, ArrowRight, ExternalLink, Settings, MessageSquare } from 'react-feather';
+import { Book, ArrowRight, ExternalLink, Settings, MessageSquare, FileText } from 'react-feather';
 import { useTheme } from '../context/ThemeContext';
 
 const Dashboard: React.FC = () => {
@@ -68,8 +68,27 @@ const Dashboard: React.FC = () => {
           <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Quick Actions</h2>
           <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-6`}>Get started with RuleMaster AI's key features</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Documentation Card */}
+            <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm`}>
+              <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Documentation</h3>
+              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Learn how to use the RuleMaster AI platform effectively</p>
+              <div className={`flex items-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                <FileText className="w-5 h-5 mr-2" />
+                <p>Comprehensive guides for all platform features</p>
+              </div>
+              <Link
+                to="/documentation"
+                className={`mt-4 w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                  isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                }`}
+              >
+                View Documentation
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {/* Create Rules Card */}
             <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm`}>
               <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Create Business Rules</h3>
               <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Define custom "if-then" logic in natural language through our chatbot interface</p>
@@ -88,7 +107,7 @@ const Dashboard: React.FC = () => {
               </Link>
             </div>
 
-            {/* View Rules Card (formerly Rule Library) */}
+            {/* View Rules Card */}
             <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm`}>
               <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>View Rules</h3>
               <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Access and manage your existing business rules</p>
